@@ -1,0 +1,291 @@
+-------------------------------------
+-- Calculated Table: 'Measures Table'
+-------------------------------------
+TABLE 'Measures Table' = { "Use this table only for storing measures" }
+
+-------------------------------
+-- Measure: [Total Impressions]
+-------------------------------
+MEASURE 'Measures Table'[Total Impressions] = 
+    CALCULATE(
+        COUNTROWS('fact_ad_events'),
+        'fact_ad_events'[event_type] = "Impression"
+    )
+    , FormatString = "0"
+
+--------------------------
+-- Measure: [Total Clicks]
+--------------------------
+MEASURE 'Measures Table'[Total Clicks] = 
+    CALCULATE(
+        COUNTROWS('fact_ad_events'),
+        'fact_ad_events'[event_type] = "Click"
+    )
+    , FormatString = "0"
+
+--------------------------
+-- Measure: [Active Users]
+--------------------------
+MEASURE 'Measures Table'[Active Users] = DISTINCTCOUNT('fact_ad_events'[user_id])
+    , FormatString = "0"
+
+--------------------------------------
+-- Measure: [CTR (Click Through Rate)]
+--------------------------------------
+MEASURE 'Measures Table'[CTR (Click Through Rate)] = 
+    DIVIDE(
+        [Total Clicks],
+        [Total Impressions],
+        0
+    )
+
+---------------------------
+-- Measure: [Total Revenue]
+---------------------------
+MEASURE 'Measures Table'[Total Revenue] = SUM('event_revenue'[revenue])
+    , FormatString = "0"
+
+---------------------------------
+-- Measure: [Revenue by Campaign]
+---------------------------------
+MEASURE 'Measures Table'[Revenue by Campaign] = 
+    CALCULATE(
+        SUM('event_revenue'[revenue]),
+        ALLEXCEPT('dim_campaigns', 'dim_campaigns'[campaign_id])
+    )
+    , FormatString = "0"
+
+---------------------------------
+-- Measure: [Revenue by Platform]
+---------------------------------
+MEASURE 'Measures Table'[Revenue by Platform] = 
+    CALCULATE(
+        SUM('event_revenue'[revenue]),
+        ALLEXCEPT('dim_ads', 'dim_ads'[ad_platform])
+    )
+    , FormatString = "0"
+
+------------------------------
+-- Measure: [Revenue per User]
+------------------------------
+MEASURE 'Measures Table'[Revenue per User] = 
+    DIVIDE(
+        [Total Revenue],
+        [Active Users],
+        0
+    )
+
+--------------------------
+-- Measure: [Total Budget]
+--------------------------
+MEASURE 'Measures Table'[Total Budget] = SUM('dim_campaigns'[total_budget])
+
+-----------------
+-- Measure: [ROI]
+-----------------
+MEASURE 'Measures Table'[ROI] = 
+    DIVIDE(
+        [Total Revenue],
+        [Total Budget],
+        0
+    )
+
+---------------------------
+-- Measure: [Daily Revenue]
+---------------------------
+MEASURE 'Measures Table'[Daily Revenue] = 
+    CALCULATE (
+        [Total Revenue],
+        VALUES ( DateTable[Date] )
+    )
+    , FormatString = "0"
+
+---------------------
+-- Measure: [Measure]
+---------------------
+MEASURE 'Measures Table'[Measure] = 
+
+-----------------------------
+-- Measure: [Monthly Revenue]
+-----------------------------
+MEASURE 'Measures Table'[Monthly Revenue] = 
+    CALCULATE (
+        [Total Revenue],
+        VALUES ( DateTable[Month] )
+    )
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+--------------------------
+-- Measure: [Daily Events]
+--------------------------
+MEASURE 'Measures Table'[Daily Events] = 
+    CALCULATE (
+        COUNTROWS ( 'fact_ad_events' ),
+        VALUES ( DateTable[Date] )
+    )
+    , FormatString = "0"
+
+----------------------------
+-- Measure: [Purchase Count]
+----------------------------
+MEASURE 'Measures Table'[Purchase Count] = 
+    CALCULATE (
+        COUNTROWS ( 'fact_ad_events' ),
+        'fact_ad_events'[event_type] = "Purchase"
+    )
+    , FormatString = "0"
+
+-----------------------------
+-- Measure: [Distinct Buyers]
+-----------------------------
+MEASURE 'Measures Table'[Distinct Buyers] = 
+    CALCULATE (
+        DISTINCTCOUNT ( 'fact_ad_events'[user_id] ),
+        'fact_ad_events'[event_type] = "Purchase"
+    )
+    , FormatString = "0"
+
+---------------------------------------------------
+-- Measure: [Conversion Rate (Purchases per Click)]
+---------------------------------------------------
+MEASURE 'Measures Table'[Conversion Rate (Purchases per Click)] = 
+    DIVIDE (
+        CALCULATE (
+            COUNTROWS ( 'fact_ad_events' ),
+            'fact_ad_events'[event_type] = "Purchase"
+        ),
+        CALCULATE (
+            COUNTROWS ( 'fact_ad_events' ),
+            'fact_ad_events'[event_type] = "Click"
+        ),
+        0
+    )
+
+--------------------------------------------------------
+-- Measure: [Conversion Rate (Purchases per Impression)]
+--------------------------------------------------------
+MEASURE 'Measures Table'[Conversion Rate (Purchases per Impression)] = 
+    DIVIDE (
+        CALCULATE (
+            COUNTROWS ( 'fact_ad_events' ),
+            'fact_ad_events'[event_type] = "Purchase"
+        ),
+        CALCULATE (
+            COUNTROWS ( 'fact_ad_events' ),
+            'fact_ad_events'[event_type] = "Impression"
+        ),
+        0
+    )
+
+---------------------------------
+-- Measure: [Cost per Impression]
+---------------------------------
+MEASURE 'Measures Table'[Cost per Impression] = 
+    DIVIDE (
+        SUM ( 'dim_campaigns'[total_budget] ),
+        [Total Impressions],
+        0
+    )
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+-------------------------
+-- Measure: [Total Spent]
+-------------------------
+MEASURE 'Measures Table'[Total Spent] = 
+    SUMX (
+        'dim_campaigns',
+        VAR CampaignBudget = 'dim_campaigns'[total_budget]
+        VAR CampaignImpressions =
+            CALCULATE (
+                COUNTROWS ( 'fact_ad_events' ),
+                'fact_ad_events'[event_type] = "Impression",
+                TREATAS ( VALUES ( 'dim_campaigns'[campaign_id] ), 'dim_ads'[campaign_id] )
+            )
+        VAR CampaignServedImpressions =
+            CALCULATE (
+                COUNTROWS ( 'fact_ad_events' ),
+                'fact_ad_events'[event_type] = "Impression",
+                TREATAS ( VALUES ( 'dim_campaigns'[campaign_id] ), 'dim_ads'[campaign_id] )
+            )
+        RETURN
+            DIVIDE ( CampaignBudget, CampaignImpressions, 0 ) * CampaignServedImpressions
+    )
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+----------------------------------
+-- Measure: [CPC (Cost per CLick)]
+----------------------------------
+MEASURE 'Measures Table'[CPC (Cost per CLick)] = DIVIDE ( [Total Spent], [Total Clicks], 0 )
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+-----------------------------
+-- Measure: [Total Purchases]
+-----------------------------
+MEASURE 'Measures Table'[Total Purchases] = 
+    CALCULATE(
+        COUNTROWS('fact_ad_events'),
+        'fact_ad_events'[event_type] = "Purchase"
+    )
+    , FormatString = "0"
+
+----------------------------------------
+-- Measure: [CPA (Cost per Acquisition)]
+----------------------------------------
+MEASURE 'Measures Table'[CPA (Cost per Acquisition)] = DIVIDE ( [Total Spent], [Total Purchases], 0 )
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+---------------------------------------------
+-- Measure: [CPM (Cost per 1000 Impressions)]
+---------------------------------------------
+MEASURE 'Measures Table'[CPM (Cost per 1000 Impressions)] = DIVIDE ( [Total Spent], [Total Impressions], 0 ) * 1000
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+-----------------
+-- Measure: [CVR]
+-----------------
+MEASURE 'Measures Table'[CVR] = 
+    DIVIDE(
+        [Total Purchases],   -- numerator
+        [Total Clicks],      -- denominator
+        0                    -- alternate result if denominator is 0
+    )
+
+-------------------------------
+-- Measure: [CVR (Impressions)]
+-------------------------------
+MEASURE 'Measures Table'[CVR (Impressions)] = 
+    DIVIDE(
+        [Total Purchases],
+        [Total Impressions],
+        0
+    )
+
+---------------------------------------
+-- Measure: [AOV (Average Order Value)]
+---------------------------------------
+MEASURE 'Measures Table'[AOV (Average Order Value)] = 
+    DIVIDE (
+        [Total Revenue],
+        [Total Purchases],
+        0
+    )
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+------------------------
+-- Measure: [Total Cost]
+------------------------
+MEASURE 'Measures Table'[Total Cost] = 
+    [Cost per Impression] *
+    [Total Impressions]
+    , FormatString = "\$#,0.###############;(\$#,0.###############);\$#,0.###############"
+
+---------------------------------------
+-- Measure: [ROAS (Return on Ad Spend)]
+---------------------------------------
+MEASURE 'Measures Table'[ROAS (Return on Ad Spend)] = 
+    DIVIDE (
+        [Total Revenue],
+        [Total Cost],
+        0
+    )
+    , FormatString = "\$#,0.00;(\$#,0.00);\$#,0.00"
