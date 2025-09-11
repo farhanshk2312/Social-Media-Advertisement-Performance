@@ -1,4 +1,4 @@
-# Digital Marketing Analytics Project
+# Social Media Advertisement Performance
 
 Data Source: https://www.kaggle.com/datasets/alperenmyung/social-media-advertisement-performance
 
