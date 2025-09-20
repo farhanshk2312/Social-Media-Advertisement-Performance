@@ -22,30 +22,30 @@ ________________________________________
 ________________________________________
 # Data Pipeline (ELT Approach)
 
-1. Extract
+## 1. Extract
   
-    •	Ingested raw CSV files (users.csv, campaigns.csv, ads.csv, ad_events.csv) into SQLite as staging tables (raw_users, raw_campaigns, raw_ads, raw_ad_events).
+  •	Ingested raw CSV files (users.csv, campaigns.csv, ads.csv, ad_events.csv) into SQLite as staging tables (raw_users, raw_campaigns, raw_ads, raw_ad_events).
 
- 2. Load
+ ## 2. Load
 
-    •	Loaded the raw tables into Python & Power BI.
+  •	Loaded the raw tables into Python & Power BI.
 
-    •	Checked for duplicate user IDs and removed them before inserting into the database.
-  
-3. Transform
-  
-    •	Date Standardization – Converted text dates into proper DATE fields.
-  
-    •	User Interests Normalization – Split multiple interests into separate rows (exploded into a normalized tag table).
+  •	Checked for duplicate user IDs and removed them before inserting into the database.
 
-    •	Joins – Connected fact (ad_events) to dimensions (ads, campaigns, users).
+## 3. Transform
   
-    •	Cost Allocation – Campaign budgets distributed across impressions to calculate cost at ad and user levels.
+  •	Date Standardization – Converted text dates into proper DATE fields.
+
+  •	User Interests Normalization – Split multiple interests into separate rows (exploded into a normalized tag table).
+
+  •	Joins – Connected fact (ad_events) to dimensions (ads, campaigns, users).
+
+  •	Cost Allocation – Campaign budgets distributed across impressions to calculate cost at ad and user levels.
 ________________________________________
 
 # Metrics & Calculations
   
-  Core Metrics
+ ## Core Metrics
   
   •	Impressions = COUNT of event_type = "Impression".
   
@@ -55,7 +55,7 @@ ________________________________________
   
   •	Distinct Users = DISTINCTCOUNT(user_id).
 
-# Funnel KPIs
+## Funnel KPIs
   
   •	Conversion Rate (CVR) = Purchases ÷ Clicks (or Purchases ÷ Impressions).
   
@@ -63,7 +63,7 @@ ________________________________________
   
   •	Return on Ad Spend (ROAS) = Revenue ÷ Cost.
 
-# Cost & Revenue
+## Cost & Revenue
   
   •	Total Budget = SUM(campaigns[total_budget]).
   
@@ -71,7 +71,7 @@ ________________________________________
   
   •	Revenue = SUM(fact_ad_events[revenue], from purchases).
 
-# Time-based Metrics
+## Time-based Metrics
 
   •	Daily Events = COUNTROWS of events by day.
   
@@ -89,6 +89,7 @@ ________________________________________
   
   5.	Cost Allocation Logic – Implemented impression-based budget allocation to analyze spend at a granular level.
 ________________________________________
-Conclusion
+# Conclusion
+
 This project successfully simulates a real-world marketing analytics workflow, starting from raw ad event data to a decision-ready Power BI dashboard. By building this, I gained practical experience in SQL, Python, ELT processes, and DAX, while also improving my understanding of digital advertising metrics and their strategic importance.
 This exercise was done to develop foundational knowledge in marketing analytics and demonstrate data engineering, modeling, and visualization skills in a portfolio-ready project.
